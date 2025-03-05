@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup</title>
+    <script>
+        function toggleQualificationField() {
+            var role = document.getElementById("role").value;
+            var qualificationField = document.getElementById("qualificationField");
+            if (role === "employee") {
+                qualificationField.style.display = "block";
+            } else {
+                qualificationField.style.display = "none";
+            }
+        }
+
+        async function signupUser(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const role = document.getElementById("role").value;
+            const qualification = document.getElementById("qualification").value;
+
+            const requestData = { username, password, role };
+            if (role === "employee") {
+                requestData.qualification = qualification;
+            }
+
+            const response = await fetch("http://127.0.0.1:5000/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestData),
+            });
+
+            const data = await response.json();
+            alert(data.message);
+        }
+    </script>
+</head>
+<body>
+    <h2>Signup</h2>
+    <form onsubmit="signupUser(event)">
+        <label for="username">Username:</label>
+        <input type="text" id="username" required><br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" required><br><br>
+
+        <label for="role">Role:</label>
+        <select id="role" onchange="toggleQualificationField()" required>
+            <option value="manager">Manager</option>
+            <option value="employee">Employee</option>
+        </select><br><br>
+
+        <div id="qualificationField" style="display: none;">
+            <label for="qualification">Qualification:</label>
+            <input type="text" id="qualification"><br><br>
+        </div>
+
+        <button type="submit">Signup</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Management System - Home</title>
+  <style>
+    /* Full-screen background with an image */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('https://source.unsplash.com/1600x900/?business,technology') no-repeat center center/cover;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+    }
+    /* Glassmorphism container */
+    .container {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 40px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 90%;
+      backdrop-filter: blur(10px);
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 1.2em;
+      margin-bottom: 20px;
+    }
+    /* Button and link styling */
+    .button-group a {
+      display: inline-block;
+      text-decoration: none;
+      color: #fff;
+      background: #ff7eb3;
+      padding: 12px 24px;
+      margin: 10px;
+      border-radius: 6px;
+      font-size: 1.1em;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .button-group a:hover {
+      background: #ff4f91;
+      transform: scale(1.05);
+    }
+    .links p {
+      font-size: 1em;
+      margin: 10px 0;
+    }
+    .links a, .signup a {
+      color: #ffdf5e;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Project Management System</h1>
+    <p>Please select your role to login:</p>
+    
+    <div class="button-group">
+      <a href="login_manager.html">Login as Manager</a>
+      <a href="login_employee.html">Login as Employee</a>
+    </div>
+    
+    <div class="links">
+      <p>If you're a manager, <a href="login_manager.html">click here</a> to login.</p>
+      <p>If you're an employee, <a href="login_employee.html">click here</a> to login.</p>
+    </div>
+
+    <div class="signup">
+      <p>New user? <a href="signup.html">Sign up here</a></p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+        }
+        h2, h3 {
+            margin-bottom: 15px;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        input {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        button {
+            background: #ff7eb3;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+        button:hover {
+            background: #ff4f91;
+            transform: scale(1.05);
+        }
+        #assignedTasks, #dailyUpdates {
+            margin-top: 20px;
+            text-align: left;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+    </style>
+    <script>
+        async function assignTask(event) {
+            event.preventDefault(); // Prevent the default form submission
+            
+            const task = document.getElementById("task").value.trim();
+            if (!task) {
+                alert("Please enter a task.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/ai_assign_task", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ task }),
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to assign task");
+                }
+
+                const data = await response.json();
+                if (data.subtasks) {
+                    displayAssignedTasks(data.subtasks);
+                } else {
+                    alert("Task assignment failed!");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("An error occurred while assigning the task.");
+            }
+        }
+
+        function displayAssignedTasks(subtasks) {
+            const resultDiv = document.getElementById("assignedTasks");
+            resultDiv.innerHTML = "<h3>Assigned Subtasks:</h3>";
+            const ul = document.createElement("ul");
+
+            subtasks.forEach(subtask => {
+                const li = document.createElement("li");
+                li.textContent = `Subtask: ${subtask.subtask} → Assigned to: ${subtask.assigned_to}`;
+                ul.appendChild(li);
+            });
+
+            resultDiv.appendChild(ul);
+        }
+
+        async function fetchDailyUpdates() {
+            try {
+                const response = await fetch("http://127.0.0.1:5000/get_daily_updates");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch daily updates");
+                }
+
+                const data = await response.json();
+                const updatesDiv = document.getElementById("dailyUpdates");
+                updatesDiv.innerHTML = "<h3>Daily Updates:</h3>";
+
+                if (!data.updates || data.updates.length === 0) {
+                    updatesDiv.innerHTML += "<p>No updates available today.</p>";
+                    return;
+                }
+
+                const ul = document.createElement("ul");
+                data.updates.forEach(update => {
+                    const li = document.createElement("li");
+                    li.textContent = update;
+                    ul.appendChild(li);
+                });
+
+                updatesDiv.appendChild(ul);
+            } catch (error) {
+                console.error("Error:", error);
+                alert("An error occurred while fetching updates.");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelector("form").addEventListener("submit", assignTask);
+        });
+    </script>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Manager Dashboard</h2>
+        <h3>Assign Tasks (AI-Based Splitting)</h3>
+
+        <form>
+            <label for="task">Task Description:</label>
+            <input type="text" id="task" required><br><br>
+            <button type="submit">Split & Assign Task</button>
+        </form>
+
+        <div id="assignedTasks"></div>
+
+        <button onclick="fetchDailyUpdates()">View Daily Updates</button>
+        <div id="dailyUpdates"></div>
+    </div>
+
+</body>
+</html>

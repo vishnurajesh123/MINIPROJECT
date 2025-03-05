@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Dashboard</title>
+    <style>
+        /* Background with gradient */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Glassmorphism Container */
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            width: 400px;
+            color: white;
+        }
+
+        h2, h3 {
+            color: #fff;
+        }
+
+        #task-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        /* Task List Style */
+        li {
+            background: rgba(0, 188, 212, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-size: 16px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Buttons for Task Actions */
+        .task-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #00bcd4;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .task-btn:hover {
+            background: #008cba;
+            transform: scale(1.05);
+        }
+
+        /* Additional Buttons */
+        .dashboard-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #ff7eb3;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .dashboard-btn:hover {
+            background: #ff4f91;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h2>Welcome, <span id="username-display"></span></h2>
+        <h3>Your Assigned Subtasks</h3>
+        <ul id="task-list">
+            <!-- Subtasks will be dynamically inserted here -->
+        </ul>
+
+        <!-- Extra Buttons for Task Management (Backend can be added later) -->
+        <button class="dashboard-btn" onclick="markCompleted()">Mark Task as Completed</button>
+        <button class="dashboard-btn" onclick="updateTask()">Update Task Status</button>
+        <button class="dashboard-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const username = localStorage.getItem('username');
+
+            if (!username) {
+                alert("No username found. Please log in again.");
+                window.location.href = "login_employee.html";
+                return;
+            }
+
+            document.getElementById("username-display").textContent = username;
+
+            // Fetch subtasks assigned to the employee
+            fetch(`http://127.0.0.1:5000/get_subtasks?username=${username}`)
+                .then(response => response.json())
+                .then(data => {
+                    const taskList = document.getElementById("task-list");
+                    taskList.innerHTML = "";
+
+                    if (data.subtasks.length === 0) {
+                        taskList.innerHTML = "<li>No tasks assigned yet.</li>";
+                    } else {
+                        data.subtasks.forEach(subtask => {
+                            const li = document.createElement("li");
+                            li.textContent = subtask.task_name; // Display subtask name
+                            const button = document.createElement("button");
+                            button.textContent = "Complete";
+                            button.classList.add("task-btn");
+                            button.onclick = () => markTaskCompleted(subtask.task_name);
+                            li.appendChild(button);
+                            taskList.appendChild(li);
+                        });
+                    }
+                })
+                .catch(error => console.error("Error fetching subtasks:", error));
+        });
+
+        function markTaskCompleted(task) {
+            alert(`Marking "${task}" as completed... (Backend needed)`);
+            // Backend logic can be added later
+        }
+
+        function markCompleted() {
+            alert("Marking task as completed... (Backend needed)");
+        }
+
+        function updateTask() {
+            alert("Updating task status... (Backend needed)");
+        }
+
+        function logout() {
+            localStorage.removeItem("username");
+            window.location.href = "login_employee.html";
+        }
+    </script>
+
+</body>
+</html>
