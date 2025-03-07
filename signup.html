@@ -3,63 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup</title>
+    <title>Signup - Project Management System</title>
+    <style>
+        /* Background Image with Overlay */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('images/background3.jpg') no-repeat center center/cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+        }
+        /* Glassmorphism Container */
+        .container {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+        }
+        h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        input, select {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        button {
+            background: #ff7eb3;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+        button:hover {
+            background: #ff4f91;
+            transform: scale(1.05);
+        }
+        a {
+            color: #ffdf5e;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        #qualificationField {
+            display: none;
+        }
+    </style>
     <script>
         function toggleQualificationField() {
             var role = document.getElementById("role").value;
             var qualificationField = document.getElementById("qualificationField");
-            if (role === "employee") {
-                qualificationField.style.display = "block";
-            } else {
-                qualificationField.style.display = "none";
-            }
+            qualificationField.style.display = (role === "employee") ? "block" : "none";
         }
 
         async function signupUser(event) {
             event.preventDefault();
 
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
             const role = document.getElementById("role").value;
-            const qualification = document.getElementById("qualification").value;
+            const qualification = document.getElementById("qualification").value.trim();
+
+            if (!username || !password || !role || (role === "employee" && !qualification)) {
+                alert("Please fill in all required fields!");
+                return;
+            }
 
             const requestData = { username, password, role };
             if (role === "employee") {
                 requestData.qualification = qualification;
             }
 
-            const response = await fetch("http://127.0.0.1:5000/signup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestData),
-            });
+            try {
+                const response = await fetch("http://127.0.0.1:5000/signup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestData),
+                });
 
-            const data = await response.json();
-            alert(data.message);
+                const data = await response.json();
+                alert(data.message);
+
+                if (data.success) {
+                    localStorage.setItem("username", username); // ✅ Store username
+                    window.location.href = role === "manager" ? "login_manager.html" : "login_employee.html";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Something went wrong. Please try again.");
+            }
         }
     </script>
 </head>
 <body>
-    <h2>Signup</h2>
-    <form onsubmit="signupUser(event)">
-        <label for="username">Username:</label>
-        <input type="text" id="username" required><br><br>
+    <div class="container">
+        <h2>Signup</h2>
+        <form onsubmit="signupUser(event)">
+            <input type="text" id="username" placeholder="Enter Username" required>
+            <input type="password" id="password" placeholder="Enter Password" required>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" required><br><br>
+            <select id="role" onchange="toggleQualificationField()" required>
+                <option value="">Select Role</option>
+                <option value="manager">Manager</option>
+                <option value="employee">Employee</option>
+            </select>
 
-        <label for="role">Role:</label>
-        <select id="role" onchange="toggleQualificationField()" required>
-            <option value="manager">Manager</option>
-            <option value="employee">Employee</option>
-        </select><br><br>
+            <div id="qualificationField">
+                <input type="text" id="qualification" placeholder="Enter Qualification">
+            </div>
 
-        <div id="qualificationField" style="display: none;">
-            <label for="qualification">Qualification:</label>
-            <input type="text" id="qualification"><br><br>
-        </div>
-
-        <button type="submit">Signup</button>
-    </form>
+            <button type="submit">Signup</button>
+        </form>
+        <p>Already have an account? <a href="login_employee.html">Login here</a></p>
+        <p>Back to <a href="index.html">Home</a></p>
+    </div>
 </body>
 </html>
