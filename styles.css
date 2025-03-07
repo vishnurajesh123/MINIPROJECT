@@ -1,74 +1,76 @@
-/* General Styling */
+/* Full-screen background image */
 body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(to right, #6a11cb, #2575fc);
-    color: white;
-    text-align: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: url('images/background.jpg') no-repeat center center/cover; /* Ensure correct path */
+    margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
+    color: #fff;
 }
 
-/* Container Box */
+/* Glassmorphism container */
 .container {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    width: 350px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 40px;
+    border-radius: 12px;
     text-align: center;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
     backdrop-filter: blur(10px);
 }
 
-/* Headings */
 h1 {
-    font-size: 24px;
-    margin-bottom: 15px;
+    font-size: 2.5em;
+    margin-bottom: 20px;
 }
 
-/* Buttons */
-button {
-    background: #ff7eb3;
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 10px 0;
-    width: 100%;
-    transition: 0.3s;
+p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
 }
 
-button:hover {
-    background: #ff4f91;
-}
-
-/* Form Inputs */
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 5px;
-}
-
-/* Links */
-a {
-    color: #ffdf5e;
+/* Button and link styling */
+.button-group a {
+    display: inline-block;
     text-decoration: none;
+    color: #fff;
+    background: #ff7eb3;
+    padding: 12px 24px;
+    margin: 10px;
+    border-radius: 6px;
+    font-size: 1.1em;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.button-group a:hover {
+    background: #ff4f91;
+    transform: scale(1.05);
+}
+
+.links p {
+    font-size: 1em;
+    margin: 10px 0;
+}
+
+.links a, .signup a {
+    color: #ffdf5e;
+    text-decoration: underline;
     font-weight: bold;
 }
-
-a:hover {
-    text-decoration: underline;
+body.manager-login {
+    background: url('images/background1.jpg') no-repeat center center/cover;
 }
-
-/* Button Group */
-.button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+body.employee-login {
+    background: url('images/background2.jpg') no-repeat center center/cover;
+}
+/* 🔹 Signup Page - Different Background */
+body.signup-page {
+    background: url(images/background2.jpg)
+}
+body.manager-dashboard {
+    background: url('images/background4.jpg') no-repeat center center/cover;
 }
