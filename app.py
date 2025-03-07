@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+sfrom flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 import mysql.connector
@@ -6,6 +6,7 @@ from mysql.connector import Error
 import requests  # For Mistral AI
 import os
 import time
+import json
 
 # Set the environment variable correctly
 os.environ["MISTRAL_API_KEY"] = "0SuooKNUYwXJsA56w9JejMDVXAPGztNE"
@@ -140,8 +141,10 @@ def get_employees():
 
 def split_task_with_mistral(task_description, employees):
     """
-    Uses Mistral AI to split a given task into subtasks based on employee qualifications.
+    Uses Mistral AI to split a task into subtasks based on employee qualifications.
+    Returns a structured list of assigned subtasks.
     """
+
     try:
         if not MISTRAL_API_KEY:
             print("❌ ERROR: MISTRAL_API_KEY is missing.")
@@ -151,54 +154,67 @@ def split_task_with_mistral(task_description, employees):
         print(f"👥 Employees Data: {employees}")
 
         # Prepare employee info
-        employee_info = [{"name": emp["username"], "qualification": emp["qualification"]} for emp in employees]
+        employee_info = [
+            {"name": emp["username"], "qualification": emp["qualification"]}
+            for emp in employees
+        ]
 
-        # Make a request to Mistral AI API
+        # Set up API request headers
         headers = {
             "Authorization": f"Bearer {MISTRAL_API_KEY}",
             "Content-Type": "application/json"
         }
 
+        # Modify the AI prompt to return JSON
         payload = {
-            "model": "codestral-latest",  # Use the correct model name
+            "model": "codestral-latest",
             "messages": [
-                {"role": "system", "content": "You are an AI assistant that splits tasks into subtasks and assigns them to employees based on qualifications."},
-                {"role": "user", "content": f"Task: {task_description}. Employees: {employee_info}. Split and assign."}
+                {"role": "system", "content": "You are an AI assistant that splits tasks into subtasks and assigns them to employees based on qualifications. "
+                                               "Return the response as a structured JSON object, without Markdown formatting."},
+                {"role": "user", "content": f"Task: {task_description}. Employees: {employee_info}. "
+                                            "Provide a JSON output with the structure: {\"subtasks\": [{\"task\": \"<task>\", \"assigned_to\": \"<employee>\"}]}."}
             ]
         }
 
         response = requests.post(MISTRAL_API_URL, json=payload, headers=headers)
 
         print(f"📡 API Response Status: {response.status_code}")
-        print(f"📜 API Response Content: {response.text}")
+        print(f"📜 Raw API Response Content: {response.text}")
 
-        if response.status_code == 429:  # Rate limit exceeded
+        if response.status_code == 429:  # Handle rate limit
             print("❌ Rate limit exceeded. Retrying after delay...")
-            time.sleep(10)  # Wait before retrying
+            time.sleep(10)
             response = requests.post(MISTRAL_API_URL, json=payload, headers=headers)
 
         if response.status_code != 200:
             print("❌ Mistral AI Error:", response.text)
             return []
 
-        # Parse AI response
+        # Parse AI response safely
         ai_output = response.json()["choices"][0]["message"]["content"]
-        print(f"✅ AI Output: {ai_output}")
+        print(f"✅ Raw AI Output: {ai_output}")
 
-        # Convert response into structured subtasks
-        assigned_tasks = []
-        for line in ai_output.split("\n"):
-            if "→" in line:
-                subtask, assigned_to = map(str.strip, line.split("→"))
-                assigned_tasks.append({"subtask": subtask, "assigned_to": assigned_to})
+        try:
+            # ✅ Fix: Remove Markdown code block before parsing JSON
+            ai_output_cleaned = ai_output.strip("```json").strip("```").strip()  
+            ai_response = json.loads(ai_output_cleaned)
+            assigned_tasks = ai_response.get("subtasks", [])
 
-        print(f"✅ Final Assigned Tasks: {assigned_tasks}")
-        return assigned_tasks
+            # Validate the response format
+            if not isinstance(assigned_tasks, list):
+                print("❌ ERROR: AI response format is incorrect.")
+                return []
+
+            print(f"✅ Final Assigned Tasks: {assigned_tasks}")
+            return assigned_tasks
+
+        except json.JSONDecodeError:
+            print("❌ ERROR: Failed to parse AI response into structured subtasks.")
+            return []
 
     except Exception as e:
         print("❌ Error in Mistral AI request:", e)
         return []
-
 # ✅ AI Task Splitting Route
 @app.route("/ai_assign_task", methods=["POST"])
 def ai_assign_task():
@@ -214,33 +230,29 @@ def ai_assign_task():
         return jsonify({"error": "Database connection failed"}), 500
 
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT username , qualification FROM employees")
+    cursor.execute("SELECT username, qualification FROM employees")
     employees = cursor.fetchall()
 
     assigned_tasks = split_task_with_mistral(task_description, employees)
 
-    # ✅ Insert assigned tasks into the `tasks` table
+    # ✅ Insert assigned subtasks into the `subtasks` table
     try:
         for task in assigned_tasks:
-            task_name = task_description  # Store original task description
             subtask_name = task["subtask"]
             assigned_employee = task["assigned_to"]
-            subtask_description = task.get("description", "")  # Optional field
-            priority = "medium"  # Default priority
             status = "pending"
 
-            # ✅ Insert into `tasks` table
             cursor.execute("""
-                INSERT INTO tasks (task, subtask, status, description, assigned_to, assigned_by, priority)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (task_name, subtask_name, status, subtask_description, assigned_employee, manager_username, priority))
+                INSERT INTO subtasks (task_name, subtask_name, assigned_to, assigned_by, status)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (task_description, subtask_name, assigned_employee, manager_username, status))
 
         conn.commit()
-        print("✅ Assigned tasks inserted into database successfully.")
+        print("✅ Assigned subtasks inserted into database successfully.")
 
     except Exception as e:
         conn.rollback()
-        print("❌ ERROR inserting tasks into database:", e)
+        print("❌ ERROR inserting subtasks into database:", e)
 
     cursor.close()
     conn.close()
@@ -265,6 +277,44 @@ def save_task_to_db(task_name, subtask, description, assigned_to, assigned_by, p
     cursor.execute(sql, values)
     connection.commit()
     connection.close()
+
+@app.route("/get_all_subtasks", methods=["GET"])
+def get_all_subtasks():
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM subtasks")
+    subtasks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(subtasks)
+
+
+# ✅ Fetch Employee's Assigned Subtasks
+@app.route("/get_employee_subtasks", methods=["POST"])
+def get_employee_subtasks():
+    data = request.json
+    username = data.get("username")
+
+    if not username:
+        return jsonify({"error": "Username is required"}), 400
+
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM subtasks WHERE assigned_to = %s", (username,))
+    subtasks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(subtasks)
 
 
 # ✅ Serve Static Files (Frontend Pages)
