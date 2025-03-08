@@ -1,8 +1,7 @@
-sfrom flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-import mysql.connector
-from mysql.connector import Error
+import mysql.connector 
 import requests  # For Mistral AI
 import os
 import time
@@ -243,9 +242,9 @@ def ai_assign_task():
             status = "pending"
 
             cursor.execute("""
-                INSERT INTO subtasks (task_name, subtask_name, assigned_to, assigned_by, status)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (task_description, subtask_name, assigned_employee, manager_username, status))
+                INSERT INTO subtasks (subtask, assigned_to )
+                VALUES (%s, %s)
+            """, (task_description, employees))
 
         conn.commit()
         print("✅ Assigned subtasks inserted into database successfully.")
